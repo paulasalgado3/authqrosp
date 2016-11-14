@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+var connection = new WebSocket('wss://10.105.231.63:8443/' , ['soap','xmpp']);
+connection.onmessage = function (e) {
+        if (e.data == "usuario logueado"){
+                window.location = "http://www.google.com";
+        }
+  console.log('Server: ' + e.data);
+};
+</script>
+</head>
+<body>
+</body>
+</html>

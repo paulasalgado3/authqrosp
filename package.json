@@ -1,0 +1,28 @@
+{
+  "name": "authqr",
+  "version": "1.0.0",
+  "description": "Autenticación con codigo QR",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js",
+	"start": "node index.js"
+  },
+   "repository" :
+  { "type" : "git"
+  , "url" : "https://github.com/salgadop/qr.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "fingerprintjs2": "^1.4.1",
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "https": "^1.0.0",
+    "os": "^0.1.1",
+    "qr-image": "^3.1.0",
+    "websocket": "^1.0.23",
+    "ws": "^1.1.1"
+  }
+}
