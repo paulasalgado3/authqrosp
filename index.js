@@ -13,8 +13,10 @@ var app = express();
 var websocket = require('ws').Server;
 
 var usuarioLogueado = '';
-var HOSTIP = process.env.FQDN;
-var PUERTO = process.env.PUERTO;
+//var HOSTIP = process.env.FQDN;
+var HOSTIP = "10.105.231.63";
+//var PUERTO = process.env.PUERTO;
+var PUERTO = 8443; 
 // your express configuration here
 
 //var httpServer = http.createServer(app);
@@ -48,8 +50,18 @@ function usuLogueado(){
 	});
 }
 
+var login = qr.image("https://"+HOSTIP+":8443/loginRemoto" , {type: 'png'});
+login.pipe(require('fs').createWriteStream('login.png'));
+var registro = qr.image("https://"+HOSTIP+":8443/registroRemoto" , {type: 'png'});
+registro.pipe(require('fs').createWriteStream('registro.png'));
+
 app.get(/^(.+)$/, function(req,res,next){
 	switch(req.params[0]){
+		case '/':
+			var body="<script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario logueado'){window.location = 'http://www.google.com';}console.log('Server: ' + e.data);};</script><table><tbody><tr><td align='center' style='width:10%'>Login</td><td align='center'style='width:10%'>Registrarse</td></tr><tr><td><img src='login.png' style='display:block;  margin:auto; width:30%'></td><td><img src='registro.png' style='display:block;  margin:auto; width:30%'></td></tr></tbody></table>";
+
+			res.send(body);
+			break;
 		case '/registro':
 			var code = qr.image("https://"+ HOSTIP + "/registroRemoto", { type: 'svg' });
 		        res.type('svg');
@@ -61,18 +73,18 @@ app.get(/^(.+)$/, function(req,res,next){
 			code.pipe(res);
 			break;
 		case '/loginRemoto':
-			var body="<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Login Correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://"+HOSTIP+"/iniciarSesion',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>";
+			var body="<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Login Correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://"+HOSTIP+":8443/iniciarSesion',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>";
 			res.send(body);
 			break;
 		case '/registroRemoto':	
 			var body=
-"<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Registro correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://" +HOSTIP +"/guardarRegistro',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>"
+"<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Registro correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://" +HOSTIP +":8443/guardarRegistro',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>"
 ;
 			res.send(body);
 			break;
 		case '/inicial':
 			var body=
-"<script>var connection = new WebSocket('wss://"+HOSTIP+"/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario logueado'){                window.location = 'http://www.google.com';        }  console.log('Server: ' + e.data);};</script>";
+"<script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario logueado'){                window.location = 'http://www.google.com';        }  console.log('Server: ' + e.data);};</script>";
 			res.send(body);
 			break;
 		default:
@@ -85,12 +97,12 @@ app.post(/^(.+)$/, function(req,res,next){
 	switch(req.params[0]){
 		case '/guardarRegistro':
 			usuarioLogueado = req.body.id;
-			console.log(req.body.id);
 			break;	
 		case '/iniciarSesion':
 			var id = req.body.id;
 			if(usuarioLogueado == id){
 			//enviar notificación al browser para que vea que el usuario se logueo
+			console.log(wss.clients);
 			usuLogueado();
 			}	
 		default:
