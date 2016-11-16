@@ -18,6 +18,7 @@ var HOSTIP = "10.105.231.63";
 //var PUERTO = process.env.PUERTO;
 var PUERTO = 8443; 
 // your express configuration here
+var PKGCLOUD = "10.105.231.23";
 
 //var httpServer = http.createServer(app);
 var httpsServer = https.createServer(credentials, app);
@@ -77,9 +78,7 @@ app.get(/^(.+)$/, function(req,res,next){
 			res.send(body);
 			break;
 		case '/registroRemoto':	
-			var body=
-"<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Registro correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://" +HOSTIP +":8443/guardarRegistro',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>"
-;
+			var body="<!DOCTYPE HTML><html><script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();var fingerprint = '';fp.get(function(result, components){      			fingerprint=result;	});	function registrarse(usuario,pass){  var usuario_json={'username':usuario,'password':pass}; console.log(usuario_json);  			enviarPOST(JSON.stringify(usuario_json)); };function guardarUsuario(token){ console.log('id:'+fingerprint + ' token:' + token);};		function enviarPOST(json){        		$.ajax({                url: 'https://" +PKGCLOUD +":3000/getToken',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {   guardarUsuario(data)             },                error: function (result) {                }        });}; var usuario='usuario'; var password='password';		</script>		<table><tbody><tr><td>Usuario:</td><td><input id='usuario'></td></tr><tr><td>Password:</td><td><input id='password'></td></tr><tr><td colspan='2' align='center'>	<button onClick='registrarse(document.getElementById(usuario).value,document.getElementById(password).value)'>Aceptar</button></td></tr></tbody></table></html>";
 			res.send(body);
 			break;
 		case '/inicial':
