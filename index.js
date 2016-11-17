@@ -7,6 +7,7 @@ var qr = require ('qr-image');
 var fp = require ('fingerprintjs2');
 var bodyParser = require('body-parser');
 var redis = require('redis');
+var request = require('request');
 
 var cliente_redis = redis.createClient ('6379','localhost');
 
@@ -54,7 +55,7 @@ function usuLogueado(){
 	});
 }
 function usuRegistrado(){
-	wss.client.forEach(function each(client){
+	wss.clients.forEach(function each(client){
 	client.send("usuario registrado");
 	});
 }
@@ -83,12 +84,12 @@ app.get(/^(.+)$/, function(req,res,next){
 			break;
 		*/
 		case '/loginRemoto':
-			var body="<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = {                id: result        };        enviarPOST(JSON.stringify(usuario));        document.body.innerHTML = 'Login Correcto';        });function enviarPOST(json){        $.ajax({                url: 'https://"+HOSTIP+":8443/iniciarSesion',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {                },                error: function (result) {                }        });}</script>";
+			var body="<script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();fp.get(function(result, components){        var usuario = new Object(); usuario.id=result; enviarPOST(JSON.stringify(usuario)); });function enviarPOST(json){        $.ajax({                url: 'https://"+HOSTIP+":8443/iniciarSesion',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) { document.body.innerHTML = 'Login Correcto';  },                error: function (result) { document.body.innerHTML = 'Error el iniciar sesión, intente nuevamente';                }        });}</script>";
 			res.send(body);
 			res.end();
 			break;
 		case '/registroRemoto':
-			var body="<!DOCTYPE HTML><html><script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario registrado'){window.location = 'https://"+HOSTIP+":8443/';}console.log('Server: ' + e.data);};</script><script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();var fingerprint = '';fp.get(function(result, components){      			fingerprint=result;	});	function registrarse(usuario,pass){  var usuario_up=new Object(); usuario_up.username=usuario; usuario_up.password=pass; console.log(usuario_up);  			enviarPOST_getToken(JSON.stringify(usuario_up)); };function guardarUsuario(token){ var usu=new Object(); usu.id =fingerprint; usu.token=token.responseText; console.log(usu); enviarPOST_registrarUsuario(JSON.stringify(usu)); };		function enviarPOST_getToken(json){        		$.ajax({                url: 'https://" +PKGCLOUD +":3000/getToken',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {   },                error: function (result) { if(result.status==200){console.log(result.status); guardarUsuario(result);}else{console.log(result.status);}      }        });};  function enviarPOST_registrarUsuario(json){                     $.ajax({                url: 'https://" +HOSTIP +":8443/registrarUsuario',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {console.log('bien');   },                error: function (result) { console.log( result);      }        });};  var usuario='usuario'; var password='password';		</script>		<table><tbody><tr><td>Usuario:</td><td><input id='usuario'></td></tr><tr><td>Password:</td><td><input id='password'></td></tr><tr><td colspan='2' align='center'>	<button onClick='registrarse(document.getElementById(usuario).value,document.getElementById(password).value)'>Aceptar</button></td></tr></tbody></table></html>";
+			var body="<!DOCTYPE HTML><html><script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario registrado'){document.body.innerHTML='Usted se ha registrado correctamente';}console.log('Server: ' + e.data);};</script><script src='fingerprint2.js'></script><script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script><script>var fp = new Fingerprint2();var xhr = new XMLHttpRequest();var fingerprint = '';fp.get(function(result, components){                         fingerprint=result;     });     function registrarse(usuario,pass){  var usuario_up=new Object(); usuario_up.username=usuario; usuario_up.password=pass; console.log(usuario_up); enviarPOST_getTokenLocal(JSON.stringify(usuario_up)); };function guardarUsuario(userData){ var usu=new Object(); usu.id =fingerprint; usu.token=userData.tokenid; usu.tenant=userData.tenantid;console.log(usu); enviarPOST_registrarUsuario(JSON.stringify(usu)); };              function enviarPOST_getToken(json){                     $.ajax({                url: 'https://" +PKGCLOUD +":3000/tokens',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {console.log(data); guardarUsuario(data);   },                error: function (result) {alert('Usuario o contraseña incorrecta'); }            });}; function enviarPOST_getTokenLocal(json){                     $.ajax({                url: 'https://" +HOSTIP +":8443/tokens',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {console.log(data); guardarUsuario(data);   },                error: function (result) {alert('Usuario o contraseña incorrecta'); }            });};  function enviarPOST_registrarUsuario(json){                     $.ajax({                url: 'https://" +HOSTIP +":8443/registrarUsuario',                type: 'POST',                dataType: 'json',                data: json,                contentType: 'application/json; charset=utf-8',                success: function (data) {console.log('bien');   },                error: function (result) { console.log( result);      }        });};  var usuario='usuario'; var password='password';          </script>               <table><tbody><tr><td>Usuario:</td><td><input id='usuario'></td></tr><tr><td>Password:</td><td><input id='password'></td></tr><tr><td colspan='2' align='center'>       <button onClick='registrarse(document.getElementById(usuario).value,document.getElementById(password).value)'>Aceptar</button></td></tr></tbody></table></html>";
 			res.send(body);
 			res.end();
 			break;
@@ -105,19 +106,45 @@ app.get(/^(.+)$/, function(req,res,next){
 
 app.post(/^(.+)$/, function(req,res,next){
 	switch(req.params[0]){
+		case '/tokens':
+			var myJSONObject = req.body; 
+			var headers = {
+ 			   'User-Agent':       'Super Agent/0.0.1',
+		 	   'Content-Type':     'application/json; charset=utf-8' 
+			}			
+			// Configure the request
+			var options = {
+				rejectUnauthorized: false,
+			    url: 'https://'+PKGCLOUD+':3000/tokens',
+			    method: 'POST',
+			    headers: headers,
+			    json: myJSONObject
+			}
+			console.log(myJSONObject);
+			request(options, function (error, response, body) {
+			    if (!error && response.statusCode == 200) {
+		        // Print out the response body
+				console.log(body);
+				res.status(200).send(body);
+				res.end();
+			    }
+			})
+			break;
 		case '/registrarUsuario':
-			cliente_redis.hmset('id',req.body.id,'token',req.body.token, function (err, res) { });
-			usuarioRegistrado();
+			var id_usuario='id:'+req.body.id;
+			cliente_redis.hmset(id_usuario,'token',req.body.token,'tenant',req.body.tenant, function (err, res) { });
+			usuRegistrado();
 			//cliente_redis.hgetall('usuario',  function(err, reg) { });
 			res.end();
 			break;	
 		case '/iniciarSesion':
-			var id = req.body.id;
-			if(usuarioLogueado == id){
+			var id_usuario = 'id:'+req.body.id;
+			cliente_redis.hgetall(id_usuario, function(err,reg){console.log(reg);});
+			//if(usuarioLogueado == id){
 			//enviar notificación al browser para que vea que el usuario se logueo
-			console.log(wss.clients);
-			usuLogueado();
-			}		
+			//console.log(wss.clients);
+			//usuLogueado();
+			//}		
 			res.end();
 			break;
 		default:
