@@ -15,7 +15,7 @@ var credentials = {key: privateKey, cert: certificate};
 var express = require('express');
 var app = express();
 var websocket = require('ws').Server;
-
+var ids = '';
 var usuarioLogueado = '';
 //var HOSTIP = process.env.FQDN;
 var HOSTIP = "10.105.231.63";
@@ -38,6 +38,7 @@ var wss = new websocket ( {
 	server: httpsServer, 
 });
 
+
 function originIsAllowed(origin) {
   // put logic here to detect whether the specified origin is allowed. 
   return true;
@@ -45,11 +46,23 @@ function originIsAllowed(origin) {
 
 wss.on('connection', function (wss){
 	//enviar algo
-	wss.send('prueba');
+	wss.send('conectado');
+	 wss.on('message', function incoming(message) {
+		if(message=="solicitoToken"){
+			enviarMensaje(JSON.stringify(ids));
+		}
+  });
 
 });
+function enviarMensaje(mensaje){
+	 wss.clients.forEach(function each(client){
+                        client.send(mensaje);
+                });
 
-function usuLogueado(){
+}
+function usuLogueado(datos){
+	ids=datos;
+	console.log(ids);
 	wss.clients.forEach(function each(client){
 	client.send("usuario logueado");
 	});
@@ -67,7 +80,7 @@ registro.pipe(require('fs').createWriteStream('registro.png'));
 app.get(/^(.+)$/, function(req,res,next){
 	switch(req.params[0]){
 		case '/':
-			var body="<script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario logueado'){window.location = 'http://www.google.com';}console.log('Server: ' + e.data);};</script><table><tbody><tr><td align='center' style='width:10%'>Login</td><td align='center'style='width:10%'>Registrarse</td></tr><tr><td><img src='login.png' style='display:block;  margin:auto; width:30%'></td><td><img src='registro.png' style='display:block;  margin:auto; width:30%'></td></tr></tbody></table>";
+			var body="<script>var connection = new WebSocket('wss://"+HOSTIP+":8443/' , ['soap','xmpp']);connection.onmessage = function (e) {        if (e.data == 'usuario logueado'){window.location = 'https://"+PKGCLOUD+":3000/html/combos.html';}console.log('Server: ' + e.data);};</script><table><tbody><tr><td align='center' style='width:10%'>Login</td><td align='center'style='width:10%'>Registrarse</td></tr><tr><td><img src='login.png' style='display:block;  margin:auto; width:30%'></td><td><img src='registro.png' style='display:block;  margin:auto; width:30%'></td></tr></tbody></table>";
 
 			res.send(body);
 			res.end();
@@ -139,12 +152,7 @@ app.post(/^(.+)$/, function(req,res,next){
 			break;	
 		case '/iniciarSesion':
 			var id_usuario = 'id:'+req.body.id;
-			cliente_redis.hgetall(id_usuario, function(err,reg){console.log(reg);});
-			//if(usuarioLogueado == id){
-			//enviar notificación al browser para que vea que el usuario se logueo
-			//console.log(wss.clients);
-			//usuLogueado();
-			//}		
+			cliente_redis.hgetall(id_usuario, function(err,reg){ usuLogueado(reg)});
 			res.end();
 			break;
 		default:
